@@ -13,8 +13,8 @@ class ContactController extends Controller
 {
     public function index()
     {
-        $contact = Contact::latest()->paginate(5);
-        return new ContactResource(true, 'List Data Contact', $contact);
+        $contacts = Contact::latest()->paginate(10);
+        return new ContactResource(true, 'List Data Contact', $contacts);
     }
 
     public function store(Request $request)
@@ -30,25 +30,25 @@ class ContactController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        //upload image
+        //unggah image
         $image = $request->file('image');
         $image->storeAs('public/posts', $image->hashName());
 
-        //create post
-        $contact = Contact::create([
+        //tambah data
+        $contacts = Contact::create([
             'nama'     => $request->nama,
             'no_telp'   => $request->no_telp,
             'alamat' => $request->alamat,
             'image'     => $image->hashName(),
         ]);
 
-        return new ContactResource(true, 'Data Contact Berhasil Ditambahkan!', $contact);
+        return new ContactResource(true, 'Data Contact Berhasil Ditambahkan!', $contacts);
     }
 
     public function show($id)
     {
-        $contact = Contact::find($id);
-        return new ContactResource(true, 'Detail Data Contact!', $contact);
+        $contacts = Contact::find($id);
+        return new ContactResource(true, 'Detail Data Contact!', $contacts);
     }
 
     public function update(Request $request, $id)
@@ -64,7 +64,7 @@ class ContactController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $contact = Contact::find($id);
+        $contacts = Contact::find($id);
 
         if ($request->hasFile('image')) {
 
@@ -73,10 +73,10 @@ class ContactController extends Controller
             $image->storeAs('public/posts', $image->hashName());
 
             //hapus old image
-            Storage::delete('public/posts/' . basename($contact->image));
+            Storage::delete('public/posts/' . basename($contacts->image));
 
             //update contact dengan new image
-            $contact->update([
+            $contacts->update([
                 'nama'     => $request->nama,
                 'no_telp'   => $request->no_telp,
                 'alamat' => $request->alamat,
@@ -85,13 +85,24 @@ class ContactController extends Controller
         } else {
 
             //update tanpa image
-            $contact->update([
+            $contacts->update([
                 'nama'     => $request->nama,
                 'no_telp'   => $request->no_telp,
                 'alamat' => $request->alamat,
             ]);
         }
 
-        return new ContactResource(true, 'Data Contact Berhasil Diubah!', $contact);
+        return new ContactResource(true, 'Data Contact Berhasil Diubah!', $contacts);
+    }
+
+    public function destroy($id)
+    {
+        $contacts = Contact::find($id);
+
+        //hapus image
+        Storage::delete('public/posts/' . basename($contacts->image));
+        $contacts->delete();
+
+        return new ContactResource(true, 'Data Post Berhasil Dihapus!', null);
     }
 }
